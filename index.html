@@ -109,79 +109,66 @@
             { address: "H2xhatnRoZTeKyySd5fkF98Q27k1rsU9M1TXQyUsqoaq", name: "Ray" },
             { address: "8deJ9xeUvXSJwicYptA9mHsU2rN2pDx37KWzkDkEXhU6", name: "Cooker" },
             { address: "4Be9CvxqHW6BYiRAxW9Q3xu1ycTMWaL5z8NX4HR3ha7t", name: "Mitch" },
-            { address: "831qmkeGhfL8YpcXuhrug6nHj1YdK3aXMDQUCo85Auh1", name: "Meechie" },
-            { address: "7SDs3PjT2mswKQ7Zo4FTucn9gJdtuW4jaacPA65BseHS", name: "grand-insentos" },
-            { address: "BrNoqdHUCcv9yTncnZeSjSov8kqhpmzv1nAiPbq1M95H", name: "profit" },
-            { address: "26kZ9rg8Y5pd4j1tdT4cbT8BQRu5uDbXkaVs3L5QasHy", name: "Orangie" },
-            { address: "suqh5sHtr8HyJ7q8scBimULPkPpA557prMG47xCHQfK", name: "cupsey" },
-            { address: "3kebnKw7cPdSkLRfiMEALyZJGZ4wdiSRvmoN4rD1yPzV", name: "bastille" },
-            { address: "DNfuF1L62WWyW3pNakVkyGGFzVVhj4Yr52jSmdTyeBHm", name: "Gake" },
-            { address: "86AEJExyjeNNgcp7GrAvCXTDicf5aGWgoERbXFiG1EdD", name: "Publix" },
-            { address: "2aDBRNNdGEnCq2Av6Wz447CqgdEbmEaDudfGW1M85MAC", name: "BillyM2k" },
-            { address: "3rSZJHysEk2ueFVovRLtZ8LGnQBMZGg96H2Q4jErspAF", name: "staqi" },
-            { address: "Haee7H5bKDCnm6dXLkeR9DcWw9Puhnkwk71QBUSHcpUt", name: "Bazinga" },
-            { address: "8zFZHuSRuDpuAR7J6FzwyF3vKNx4CVW3DFHJerQhc7Zd", name: "POW" },
-            { address: "GFJhtZuENEB9StZiacHUd1aoBoCtY2wWLskhgwcyfaYN", name: "based16z" },
-            { address: "ifuzGjWXZqHARqu4P1sV4SG19ZqTeJgsq6VYS4n6ZC4", name: "track" },
-            { address: "GeGq7YZmgNBS3gpyrKw1dJHviSUiPVr95yitQxwKWDNr", name: "GEG" },
-            { address: "6aHwW1Hn1gQmfrBaseywYKh4X8xgNauyJkZ6qz8L6JgC", name: "real" }
+            // Add more wallets as needed
         ];
 
         async function fetchBalance(address) {
-            const response = await fetch("https://api.mainnet-beta.solana.com", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    jsonrpc: "2.0",
-                    id: 1,
-                    method: "getBalance",
-                    params: [address]
-                })
-            });
-
-            const data = await response.json();
-            return data.result ? data.result.value / 1e9 : "Error"; // Convert lamports to SOL
-        }
-
-        async function fetchLastPurchasedCoin(walletAddress) {
-            const response = await fetch("https://api.mainnet-beta.solana.com", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    jsonrpc: "2.0",
-                    id: 1,
-                    method: "getSignaturesForAddress",
-                    params: [walletAddress, { limit: 1 }]
-                })
-            });
-
-            const data = await response.json();
-            if (data.result && data.result.length > 0) {
-                const recentTransaction = data.result[0].signature;
-
-                // Fetch transaction details
-                const transactionResponse = await fetch("https://api.mainnet-beta.solana.com", {
+            try {
+                const response = await fetch("https://api.mainnet-beta.solana.com", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         jsonrpc: "2.0",
                         id: 1,
-                        method: "getTransaction",
-                        params: [recentTransaction]
+                        method: "getBalance",
+                        params: [address]
                     })
                 });
 
-                const transactionData = await transactionResponse.json();
-                if (transactionData.result && transactionData.result.meta) {
-                    const instructions = transactionData.result.transaction.message.instructions;
-                    for (const instr of instructions) {
-                        if (instr.programIdIndex === 1) {
-                            return instr.accounts[0]; // Adjust based on instruction structure
-                        }
+                const data = await response.json();
+                return data.result ? (data.result.value / 1e9).toFixed(2) : "Error"; // Convert lamports to SOL
+            } catch (error) {
+                console.error(`Error fetching balance for ${address}:`, error);
+                return "Error";
+            }
+        }
+
+        async function fetchLastPurchasedCoin(walletAddress) {
+            try {
+                const response = await fetch("https://api.mainnet-beta.solana.com", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        jsonrpc: "2.0",
+                        id: 1,
+                        method: "getSignaturesForAddress",
+                        params: [walletAddress, { limit: 1 }]
+                    })
+                });
+
+                const data = await response.json();
+                if (data.result && data.result.length > 0) {
+                    const transactionResponse = await fetch("https://api.mainnet-beta.solana.com", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            jsonrpc: "2.0",
+                            id: 1,
+                            method: "getTransaction",
+                            params: [data.result[0].signature]
+                        })
+                    });
+
+                    const transactionData = await transactionResponse.json();
+                    if (transactionData.result && transactionData.result.meta) {
+                        return transactionData.result.transaction.message.accountKeys[0]; // Adjust as needed
                     }
                 }
+                return "No recent purchases";
+            } catch (error) {
+                console.error(`Error fetching last purchased coin for ${walletAddress}:`, error);
+                return "Error";
             }
-            return "No recent purchases"; // Default if no relevant transactions are found
         }
 
         async function populateTable() {
