@@ -141,7 +141,7 @@
                 });
 
                 const data = await response.json();
-                return data.result ? (data.result.value / 1e9).toFixed(2) : "Error"; // Convert lamports to SOL
+                return data.result ? (data.result.value / 1e9).toFixed(2) : "Error";
             } catch (error) {
                 console.error(`Error fetching balance for ${address}:`, error);
                 return "Error";
@@ -164,22 +164,7 @@
                 const data = await response.json();
 
                 if (data.result && data.result.length > 0) {
-                    const transactionResponse = await fetch("https://api.mainnet-beta.solana.com", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            jsonrpc: "2.0",
-                            id: 1,
-                            method: "getTransaction",
-                            params: [data.result[0].signature]
-                        })
-                    });
-
-                    const transactionData = await transactionResponse.json();
-
-                    if (transactionData.result && transactionData.result.meta) {
-                        return transactionData.result.transaction.message.accountKeys[0];
-                    }
+                    return data.result[0].signature;
                 }
 
                 return "No recent purchases";
@@ -205,7 +190,6 @@
                 `;
                 tbody.appendChild(row);
 
-                // Add a delay to avoid rate limits
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
         }
