@@ -162,6 +162,7 @@
                 });
 
                 const data = await response.json();
+
                 if (data.result && data.result.length > 0) {
                     const transactionResponse = await fetch("https://api.mainnet-beta.solana.com", {
                         method: "POST",
@@ -175,10 +176,12 @@
                     });
 
                     const transactionData = await transactionResponse.json();
+
                     if (transactionData.result && transactionData.result.meta) {
-                        return transactionData.result.transaction.message.accountKeys[0]; // Adjust as needed
+                        return transactionData.result.transaction.message.accountKeys[0];
                     }
                 }
+
                 return "No recent purchases";
             } catch (error) {
                 console.error(`Error fetching last purchased coin for ${walletAddress}:`, error);
@@ -201,6 +204,9 @@
                     <td>${lastPurchasedCoin}</td>
                 `;
                 tbody.appendChild(row);
+
+                // Add a delay to avoid rate limits
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
         }
 
