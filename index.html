@@ -139,37 +139,11 @@
                         params: [address]
                     })
                 });
-
                 const data = await response.json();
-                return data.result ? (data.result.value / 1e9).toFixed(2) : "Error";
+                if (data.result) return (data.result.value / 1e9).toFixed(2);
+                return "Error";
             } catch (error) {
                 console.error(`Error fetching balance for ${address}:`, error);
-                return "Error";
-            }
-        }
-
-        async function fetchLastPurchasedCoin(walletAddress) {
-            try {
-                const response = await fetch("https://api.mainnet-beta.solana.com", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        jsonrpc: "2.0",
-                        id: 1,
-                        method: "getSignaturesForAddress",
-                        params: [walletAddress, { limit: 1 }]
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.result && data.result.length > 0) {
-                    return data.result[0].signature;
-                }
-
-                return "No recent purchases";
-            } catch (error) {
-                console.error(`Error fetching last purchased coin for ${walletAddress}:`, error);
                 return "Error";
             }
         }
@@ -178,19 +152,20 @@
             const tbody = document.querySelector("#walletTable tbody");
 
             for (const wallet of wallets) {
-                const balance = await fetchBalance(wallet.address);
-                const lastPurchasedCoin = await fetchLastPurchasedCoin(wallet.address);
-
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${wallet.name}</td>
-                    <td>${wallet.address}</td>
-                    <td>${balance}</td>
-                    <td>${lastPurchasedCoin}</td>
-                `;
-                tbody.appendChild(row);
-
-                await new Promise(resolve => setTimeout(resolve, 500));
+                try {
+                    const balance = await fetchBalance(wallet.address);
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${wallet.name}</td>
+                        <td>${wallet.address}</td>
+                        <td>${balance}</td>
+                        <td>No recent purchases</td>
+                    `;
+                    tbody.appendChild(row);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } catch (error) {
+                    console.error(`Error processing wallet ${wallet.address}:`, error);
+                }
             }
         }
 
